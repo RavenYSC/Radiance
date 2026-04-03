@@ -44,12 +44,7 @@ public class ChunkBuilderBuiltChunkMixins implements IChunkBuilderBuiltChunkExt 
         ChunkProxy.enqueueRebuild(self);
     }
 
-    @Inject(method = "delete()V",
-        at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;clear()V",
-            shift = At.Shift.AFTER),
-        cancellable = true)
-    public void cancelVertexConsumerDelete(CallbackInfo ci) {
-        ci.cancel();
-    }
+    // TODO: 1.21.11 - delete() method was removed from BuiltChunk. This injection is no longer needed.
+    // @Inject(method = "delete()V", ...)
+    // public void cancelVertexConsumerDelete(CallbackInfo ci) { ci.cancel(); }
 }

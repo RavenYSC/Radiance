@@ -44,19 +44,21 @@ accessible class net/minecraft/client/resource/VideoWarningManager$WarningPatter
 
 accessible class net/minecraft/client/render/chunk/ChunkRendererRegionBuilder$ClientChunk
 accessible method net/minecraft/client/render/BuiltChunkStorage getRenderedChunk (Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;
-accessible class net/minecraft/client/render/RenderLayer$MultiPhase
-accessible field net/minecraft/client/render/RenderLayer$MultiPhase phases Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;
+# TODO: 1.21.11 - RenderLayer$MultiPhase was replaced by new RenderSetup system. These entries need rework.
+# accessible class net/minecraft/client/render/RenderLayer$MultiPhase
+# accessible field net/minecraft/client/render/RenderLayer$MultiPhase phases Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;
 
 accessible class net/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk$RebuildTask
 accessible class net/minecraft/client/render/chunk/ChunkBuilder$Result
 
-accessible method net/minecraft/client/render/RenderPhase$Texture getId ()Ljava/util/Optional;
-accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters texture Lnet/minecraft/client/render/RenderPhase$TextureBase;
-accessible method net/minecraft/client/render/RenderPhase$TextureBase getId ()Ljava/util/Optional;
-accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters transparency Lnet/minecraft/client/render/RenderPhase$Transparency;
-accessible field net/minecraft/client/render/RenderPhase name Ljava/lang/String;
-accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters cull Lnet/minecraft/client/render/RenderPhase$Cull;
-accessible method net/minecraft/client/render/RenderPhase setupGlintTexturing (F)V
+# TODO: 1.21.11 - RenderPhase was restructured. These entries need rework.
+# accessible method net/minecraft/client/render/RenderPhase$Texture getId ()Ljava/util/Optional;
+# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters texture Lnet/minecraft/client/render/RenderPhase$TextureBase;
+# accessible method net/minecraft/client/render/RenderPhase$TextureBase getId ()Ljava/util/Optional;
+# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters transparency Lnet/minecraft/client/render/RenderPhase$Transparency;
+# accessible field net/minecraft/client/render/RenderPhase name Ljava/lang/String;
+# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters cull Lnet/minecraft/client/render/RenderPhase$Cull;
+# accessible method net/minecraft/client/render/RenderPhase setupGlintTexturing (F)V
 accessible method net/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk setNoCullingBlockEntities (Ljava/util/Collection;)V
 accessible method net/minecraft/client/render/item/HeldItemRenderer getHandRenderType (Lnet/minecraft/client/network/ClientPlayerEntity;)Lnet/minecraft/client/render/item/HeldItemRenderer$HandRenderType;
 accessible field net/minecraft/client/render/item/HeldItemRenderer$HandRenderType renderMainHand Z

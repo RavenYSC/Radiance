@@ -1,6 +1,5 @@
 package com.radiance.mixins.vulkan_render_integration;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.UnsafeManager;
 import com.radiance.client.option.Options;
@@ -18,8 +17,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.GpuBufferSlice;
 import net.minecraft.client.option.CloudRenderMode;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BuiltChunkStorage;
@@ -44,7 +43,6 @@ import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.BlockBreakingInfo;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
@@ -53,7 +51,6 @@ import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.profiler.Profiler;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -78,24 +75,14 @@ public abstract class WorldRendererMixins {
 
     @Final
     @Shadow
-    private EntityRenderDispatcher entityRenderDispatcher;
+    private EntityRenderDispatcher entityRenderManager;
 
     @Final
     @Shadow
-    private BlockEntityRenderDispatcher blockEntityRenderDispatcher;
+    private BlockEntityRenderDispatcher blockEntityRenderManager;
 
     @Shadow
     private BuiltChunkStorage chunks;
-
-    @Shadow
-    private Frustum frustum;
-
-    @Final
-    @Shadow
-    private List<Entity> renderedEntities;
-
-    @Shadow
-    private int renderedEntitiesCount;
 
     @Shadow
     private double lastCameraPitch;
@@ -110,10 +97,6 @@ public abstract class WorldRendererMixins {
     @Shadow
     @Final
     private Long2ObjectMap<SortedSet<BlockBreakingInfo>> blockBreakingProgressions;
-
-    @Shadow
-    @Final
-    private Set<BlockEntity> noCullingBlockEntities;
 
     @Shadow
     @Final
@@ -149,11 +132,6 @@ public abstract class WorldRendererMixins {
 
     }
 
-    @Redirect(method = "reload(Lnet/minecraft/resource/ResourceManager;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;loadEntityOutlinePostProcessor()V"))
-    public void cancelReloadWithResourceManager(WorldRenderer instance) {
-
-    }
-
     @Redirect(method = "reload()V", at = @At(value = "INVOKE", target =
         "Lnet/minecraft/client/render/ChunkRenderingDataPreparer;setStorage"
             + "(Lnet/minecraft/client/render/BuiltChunkStorage;)V"))
@@ -162,31 +140,7 @@ public abstract class WorldRendererMixins {
 
     }
 
-    @Redirect(method = "getEntitiesToRender(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;Ljava/util/List;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;isThirdPerson()Z"))
-    public boolean enablePlayerRendererInFirstPlayer(Camera instance) {
-        return true;
-    }
-
-    @Redirect(method = "getEntitiesToRender(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;Ljava/util/List;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/EntityRenderDispatcher;shouldRender(Lnet/minecraft/entity/Entity;Lnet/minecraft/client/render/Frustum;DDD)Z"))
-    public <E extends Entity> boolean loosenEntityFiltering(EntityRenderDispatcher instance,
-        E entity, Frustum frustum, double x, double y, double z) {
-        Vec3d vec3d = entity.getPos().subtract(new Vec3d(x, y, z));
-        double distance = vec3d.length();
-        if (distance < 16 * 3) {
-            return true;
-        }
-        return this.entityRenderDispatcher.shouldRender(entity, frustum, x, y, z);
-    }
-
     // region <render>
-    @Shadow
-    protected abstract void setupTerrain(Camera camera, Frustum frustum, boolean hasForcedFrustum,
-        boolean spectator);
-
-    @Shadow
-    protected abstract boolean getEntitiesToRender(Camera camera, Frustum frustum,
-        List<Entity> output);
-
     @Shadow
     protected abstract boolean canDrawEntityOutlines();
 
@@ -194,45 +148,41 @@ public abstract class WorldRendererMixins {
     protected abstract void applyFrustum(Frustum frustum);
 
     @Shadow
-    protected abstract boolean isSkyDark(float tickDelta);
-
-    @Shadow
     protected abstract boolean hasBlindnessOrDarkness(Camera camera);
 
     @Inject(method =
         "render(Lnet/minecraft/client/util/ObjectAllocator;Lnet/minecraft/client/render/RenderTickCounter;"
-            + "ZLnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V", at = @At("HEAD"), cancellable = true)
+            + "ZLnet/minecraft/client/render/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;"
+            + "Lorg/joml/Matrix4f;Lnet/minecraft/client/gl/GpuBufferSlice;Lorg/joml/Vector4f;Z)V",
+        at = @At("HEAD"), cancellable = true)
     public void redirectRender(ObjectAllocator allocator, RenderTickCounter tickCounter,
-        boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
-        Matrix4f effectedRotationMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+        boolean renderBlockOutline, Camera camera,
+        Matrix4f effectedRotationMatrix, Matrix4f projectionMatrix, Matrix4f viewMatrix4f,
+        GpuBufferSlice gpuBufferSlice, Vector4f fogColorVec, boolean skyRendered,
+        CallbackInfo ci) {
+        // TODO: 1.21.11 - verify new render parameters are correctly mapped
+        GameRenderer gameRenderer = this.client.gameRenderer;
         PlayerProxy.setCameraPos(camera.getPos());
 
         float f = tickCounter.getTickDelta(false);
         RenderSystem.setShaderGameTime(this.world.getTime(), f);
-        this.blockEntityRenderDispatcher.configure(this.world, camera, this.client.crosshairTarget);
-        this.entityRenderDispatcher.configure(this.world, camera, this.client.targetedEntity);
+        this.blockEntityRenderManager.configure(this.world, camera, this.client.crosshairTarget);
+        this.entityRenderManager.configure(this.world, camera, this.client.targetedEntity);
 
         this.world.runQueuedChunkUpdates();
         this.world.getChunkManager().getLightingProvider().doLightUpdates();
-
-        Frustum frustum = this.frustum;
 
         Vec3d vec3d = camera.getPos();
         double x = vec3d.getX();
         double y = vec3d.getY();
         double z = vec3d.getZ();
 
-        this.setupTerrain(camera, frustum, false, false);
-
-        boolean renderEntityOutline = this.getEntitiesToRender(camera, frustum,
-            this.renderedEntities);
-
         Matrix4f viewMatrix = new Matrix4f(
             ((IGameRendererExt) gameRenderer).neoVoxelRT$getRotationMatrix());
         Matrix4f effectedViewMatrix = new Matrix4f(effectedRotationMatrix);
 
         // fog
-        float h = gameRenderer.getViewDistance();
+        float h = gameRenderer.getViewDistanceBlocks();
         boolean bl2 = this.client.world.getDimensionEffects()
             .useThickFog(MathHelper.floor(x), MathHelper.floor(y))
             || this.client.inGameHud.getBossBarHud().shouldThickenFog();
@@ -344,7 +294,8 @@ public abstract class WorldRendererMixins {
 
         boolean sunRisingOrSetting = dimensionEffects.isSunRisingOrSetting(skyAngle);
 
-        boolean skyDark = this.isSkyDark(tickDelta);
+        // TODO: 1.21.11 - isSkyDark() was removed; compute sky darkness differently if needed
+        boolean skyDark = false;
 
         boolean hasBlindnessOrDarkness = this.hasBlindnessOrDarkness(camera);
 
@@ -400,17 +351,20 @@ public abstract class WorldRendererMixins {
             lightMapManagerExt.neoVoxelRT$getBrightnessFactor());
 
         // Entities
-        EntityProxy.queueEntitiesBuild(camera, renderedEntities, this.entityRenderDispatcher,
+        // TODO: 1.21.11 - entity rendering restructured into WorldRenderState; renderedEntities list no longer available
+        EntityProxy.queueEntitiesBuild(camera, List.of(), this.entityRenderManager,
             tickCounter, canDrawEntityOutlines());
 
+        // TODO: 1.21.11 - noCullingBlockEntities removed; passing empty set
         Pair<List<StorageVertexConsumerProvider>, EntityProxy.EntityRenderDataList> crumblingRenderData = EntityProxy.queueBlockEntitiesRebuild(
-            camera, chunks, this.noCullingBlockEntities, blockBreakingProgressions,
-            blockEntityRenderDispatcher, tickDelta);
+            camera, chunks, Set.of(), blockBreakingProgressions,
+            blockEntityRenderManager, tickDelta);
         EntityProxy.queueCrumblingRebuild(camera, blockBreakingProgressions,
             this.client.getBlockRenderManager(), this.world, crumblingRenderData.getLeft(),
             crumblingRenderData.getRight());
 
-        EntityProxy.queueParticleRebuild(camera, tickDelta, frustum);
+        // TODO: 1.21.11 - frustum field removed; passing null for particle frustum culling
+        EntityProxy.queueParticleRebuild(camera, tickDelta, null);
 
         if (renderBlockOutline) {
             EntityProxy.queueTargetBlockOutlineRebuild(camera, world);
@@ -461,8 +415,6 @@ public abstract class WorldRendererMixins {
         // Chunks
         ChunkProxy.rebuild(camera);
 
-        this.renderedEntities.clear();
-
         ci.cancel();
     }
     // endregion
@@ -476,16 +428,6 @@ public abstract class WorldRendererMixins {
 
     }
     // endregion
-
-    //region <setupTerrain>
-    @Inject(method = "setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder;setCameraPosition(Lnet/minecraft/util/math/Vec3d;)V", shift = At.Shift.AFTER), cancellable = true)
-    public void cancelCullAndUpdateWithChunkRenderingDataPreparer(Camera camera, Frustum frustum,
-        boolean hasForcedFrustum, boolean spectator, CallbackInfo ci, @Local Profiler profiler) {
-//        PlayerProxy.setCameraPos(camera.getPos());
-        profiler.pop();
-        ci.cancel();
-    }
-    //endregion
 
     // region <addBuiltChunk>
     @Redirect(method = "addBuiltChunk(Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;)V", at = @At(value = "INVOKE", target =
@@ -524,9 +466,10 @@ public abstract class WorldRendererMixins {
 
         if (builtChunk == null) {
             cir.setReturnValue(false);
-        } else if (builtChunk.data.get().isEmpty(null)) {
+        // TODO: 1.21.11 - verify getCurrentRenderData() return type matches expected usage
+        } else if (builtChunk.getCurrentRenderData().isEmpty(null)) {
             cir.setReturnValue(true);
-        } else if (builtChunk.data.get() == ChunkProxy.PROCESSED) {
+        } else if (builtChunk.getCurrentRenderData() == ChunkProxy.PROCESSED) {
             cir.setReturnValue(ChunkProxy.isChunkReady(builtChunk));
         }
     }

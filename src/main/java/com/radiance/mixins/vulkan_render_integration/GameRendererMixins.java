@@ -21,8 +21,10 @@ import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.client.util.Pool;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceFactory;
+import net.minecraft.client.gl.GpuBufferSlice;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -85,6 +87,7 @@ public class GameRendererMixins implements IGameRendererExt {
         return instance;
     }
 
+    // TODO: Verify new WorldRenderer.render() signature compiles against 1.21.11 mappings
     @Redirect(method = "renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V",
         at = @At(value = "INVOKE",
             target =
@@ -92,15 +95,20 @@ public class GameRendererMixins implements IGameRendererExt {
                     +
                     "Lnet/minecraft/client/render/RenderTickCounter;ZLnet/minecraft/client/render/Camera;"
                     +
-                    "Lnet/minecraft/client/render/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"))
+                    "Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;"
+                    +
+                    "Lnet/minecraft/client/gl/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"))
     public void performBTimesV(WorldRenderer instance,
         ObjectAllocator allocator,
         RenderTickCounter tickCounter,
         boolean renderBlockOutline,
         Camera camera,
-        GameRenderer gameRenderer,
         Matrix4f viewMatrix,
         Matrix4f projectionMatrix,
+        Matrix4f matrix4f3,
+        GpuBufferSlice gpuBufferSlice,
+        Vector4f vector4f,
+        boolean bl,
         @Local boolean shouldRenderBlockOutline,
         @Local MatrixStack matrixStack) {
         Matrix4f
@@ -109,8 +117,9 @@ public class GameRendererMixins implements IGameRendererExt {
                 .getPositionMatrix());
         this.viewMatrix = new Matrix4f(viewMatrix);
         viewMatrix = new Matrix4f(B.mul(viewMatrix));
-        instance.render(this.pool, tickCounter, shouldRenderBlockOutline, camera, gameRenderer,
-            viewMatrix, projectionMatrix);
+        // TODO: Verify parameter ordering for new WorldRenderer.render() at build time
+        instance.render(this.pool, tickCounter, shouldRenderBlockOutline, camera,
+            viewMatrix, projectionMatrix, matrix4f3, gpuBufferSlice, vector4f, bl);
     }
 
     @Inject(method = "renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V", at = @At(value = "TAIL"))
@@ -129,8 +138,9 @@ public class GameRendererMixins implements IGameRendererExt {
         RendererProxy.fuseWorld();
     }
 
-    @Inject(method = "renderHand(Lnet/minecraft/client/render/Camera;FLorg/joml/Matrix4f;)V", at = @At(value = "HEAD"), cancellable = true)
-    public void redirectRenderHand(Camera camera, float tickDelta, Matrix4f matrix4f,
+    // TODO: Verify renderHand signature matches 1.21.11 mappings (Camera removed, boolean sleeping added)
+    @Inject(method = "renderHand(FZLorg/joml/Matrix4f;)V", at = @At(value = "HEAD"), cancellable = true)
+    public void redirectRenderHand(float tickDelta, boolean sleeping, Matrix4f matrix4f,
         CallbackInfo ci) {
         EntityProxy.queueHandRebuild(buffers, tickDelta, firstPersonRenderer);
         ci.cancel();

@@ -24,8 +24,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormatElement;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.radiance.client.util.RenderLayerHelper;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
@@ -79,21 +80,17 @@ public class PBRVertexConsumer implements VertexConsumer {
             throw new IllegalStateException(
                 "PBR vertex stride must be 128, got " + this.vertexSizeByte);
         }
-        if (!format.has(PBR_POS)) {
+        if (!format.contains(PBR_POS)) {
             throw new IllegalArgumentException("PBR format must contain POSITION element");
         }
 
-        if (renderLayer instanceof RenderLayer.MultiPhase) {
-            Identifier
-                identifier =
-                ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
-                    .orElse(MissingSprite.getMissingSpriteId());
-            textureID =
-                MinecraftClient.getInstance()
-                    .getTextureManager()
-                    .getTexture(identifier)
-                    .getGlId();
-        }
+        Identifier identifier = RenderLayerHelper.getTextureId(renderLayer)
+            .orElse(MissingSprite.getMissingSpriteId());
+        textureID =
+            MinecraftClient.getInstance()
+                .getTextureManager()
+                .getTexture(identifier)
+                .getGlId();
     }
 
     private static void putInt(long ptr, int v) {
@@ -251,8 +248,8 @@ public class PBRVertexConsumer implements VertexConsumer {
         if (missing != 0) {
             String
                 s =
-                VertexFormatElement.streamFromMask(currentMask)
-                    .map(format::getName)
+                VertexFormatElement.elementsFromMask(currentMask)
+                    .map(format::getElementName)
                     .collect(Collectors.joining(", "));
             throw new IllegalStateException("Missing elements in vertex: " + s);
         }
@@ -408,17 +405,13 @@ public class PBRVertexConsumer implements VertexConsumer {
 
         public GLint(PBRVertexConsumer delegate, RenderLayer glintRenderLayer) {
             this.delegate = delegate;
-            if (glintRenderLayer instanceof RenderLayer.MultiPhase) {
-                Identifier
-                    identifier =
-                    ((RenderLayer.MultiPhase) glintRenderLayer).phases.texture.getId()
-                        .orElse(MissingSprite.getMissingSpriteId());
-                glintTextureID =
-                    MinecraftClient.getInstance()
-                        .getTextureManager()
-                        .getTexture(identifier)
-                        .getGlId();
-            }
+            Identifier identifier = RenderLayerHelper.getTextureId(glintRenderLayer)
+                .orElse(MissingSprite.getMissingSpriteId());
+            glintTextureID =
+                MinecraftClient.getInstance()
+                    .getTextureManager()
+                    .getTexture(identifier)
+                    .getGlId();
         }
 
         @Override
@@ -485,17 +478,13 @@ public class PBRVertexConsumer implements VertexConsumer {
         public GLintOverlay(PBRVertexConsumer delegate, RenderLayer glintRenderLayer,
             MatrixStack.Entry matrix, float textureScale) {
             this.delegate = delegate;
-            if (glintRenderLayer instanceof RenderLayer.MultiPhase) {
-                Identifier
-                    identifier =
-                    ((RenderLayer.MultiPhase) glintRenderLayer).phases.texture.getId()
-                        .orElse(MissingSprite.getMissingSpriteId());
-                glintTextureID =
-                    MinecraftClient.getInstance()
-                        .getTextureManager()
-                        .getTexture(identifier)
-                        .getGlId();
-            }
+            Identifier identifier = RenderLayerHelper.getTextureId(glintRenderLayer)
+                .orElse(MissingSprite.getMissingSpriteId());
+            glintTextureID =
+                MinecraftClient.getInstance()
+                    .getTextureManager()
+                    .getTexture(identifier)
+                    .getGlId();
 
             this.inverseTextureMatrix = new Matrix4f(matrix.getPositionMatrix()).invert();
             this.inverseNormalMatrix = new Matrix3f(matrix.getNormalMatrix()).invert();

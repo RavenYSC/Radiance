@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.VertexSorter;
 import com.radiance.client.constant.Constants;
 import com.radiance.client.proxy.vulkan.BufferProxy;
 import com.radiance.client.util.ChunkLightCollector;
+import com.radiance.client.util.RenderLayerHelper;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderBuiltChunkExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderExt;
 import java.nio.ByteBuffer;
@@ -336,7 +337,7 @@ public class ChunkProxy {
                     int
                         geometryTextureID =
                         textureManager.getTexture(
-                                ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
+                                RenderLayerHelper.getTextureId(renderLayer)
                                     .orElse(MissingSprite.getMissingSpriteId()))
                             .getGlId();
                     int vertexFormatID = Constants.VertexFormats.getValue(

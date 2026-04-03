@@ -16,24 +16,51 @@ public class RenderLayerHelper {
 
     /**
      * Extracts the primary texture Identifier from a RenderLayer.
-     * In 1.21.11, textures are stored in RenderSetup.textures as a Map.
+     * In 1.21.11, textures are stored in RenderSetup as TextureSpec entries.
+     * We iterate through the textures map and try to find an Identifier.
      *
      * @param renderLayer the render layer to extract the texture from
      * @return Optional containing the texture Identifier, or empty if none found
      */
     public static Optional<Identifier> getTextureId(RenderLayer renderLayer) {
-        RenderSetup renderSetup = renderLayer.renderSetup;
-        if (renderSetup == null) {
+        try {
+            RenderSetup renderSetup = renderLayer.renderSetup;
+            if (renderSetup == null) {
+                return Optional.empty();
+            }
+            // textures is Map<String, TextureSpec> where TextureSpec contains an Identifier
+            Map<String, ?> textures = renderSetup.textures;
+            if (textures == null || textures.isEmpty()) {
+                return Optional.empty();
+            }
+            // Iterate the textures to find any TextureSpec that has an id field
+            for (Object value : textures.values()) {
+                if (value instanceof RenderSetup.TextureSpec textureSpec) {
+                    // TextureSpec is a record-like class that wraps an Identifier
+                    // Try to get the id from it via reflection or direct field access
+                    return extractIdentifierFromTextureSpec(textureSpec);
+                }
+            }
+            return Optional.empty();
+        } catch (Exception e) {
             return Optional.empty();
         }
-        Map<String, ?> resolved = renderSetup.resolveTextures();
-        if (resolved == null || resolved.isEmpty()) {
-            return Optional.empty();
-        }
-        // Get the first texture entry (typically "Sampler0")
-        Object firstValue = resolved.values().iterator().next();
-        if (firstValue instanceof Identifier id) {
-            return Optional.of(id);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<Identifier> extractIdentifierFromTextureSpec(RenderSetup.TextureSpec textureSpec) {
+        try {
+            // TextureSpec likely has an 'id' field of type Identifier
+            // We use reflection to be safe since the exact field name might differ
+            for (java.lang.reflect.Field field : textureSpec.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                Object fieldValue = field.get(textureSpec);
+                if (fieldValue instanceof Identifier id) {
+                    return Optional.of(id);
+                }
+            }
+        } catch (Exception e) {
+            // Fall through
         }
         return Optional.empty();
     }

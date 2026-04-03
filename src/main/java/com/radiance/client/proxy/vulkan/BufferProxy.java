@@ -16,8 +16,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Fog;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.radiance.client.util.RenderLayerHelper;
 import net.minecraft.client.world.ClientWorld;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -228,7 +228,7 @@ public class BufferProxy {
 
             baseAddr += Integer.BYTES; // skip seed
 
-            RenderPhase.setupGlintTexturing(0.16F);
+            RenderLayerHelper.setupGlintTexturing(0.16F);
             Matrix4f textureMat = RenderSystem.getTextureMatrix();
             textureMat.get(baseAddr, bb);
             baseAddr += Float.BYTES * 16;

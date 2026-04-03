@@ -9,6 +9,7 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 import com.radiance.client.constant.Constants;
 import com.radiance.client.constant.Constants.RayTracingFlags;
 import com.radiance.client.proxy.vulkan.BufferProxy;
+import com.radiance.client.util.RenderLayerHelper;
 import com.radiance.client.vertex.PBRVertexConsumer;
 import com.radiance.client.vertex.StorageVertexConsumerProvider;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IHeldItemRendererExt;
@@ -868,7 +869,7 @@ public class EntityProxy {
                     RenderLayer renderLayer = entityRenderLayer.renderLayer;
                     BuiltBuffer vertexBuffer = entityRenderLayer.builtBuffer;
 
-                    Identifier identifier = ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
+                    Identifier identifier = RenderLayerHelper.getTextureId(renderLayer)
                         .orElse(MissingSprite.getMissingSpriteId());
                     int geometryTypeID = Constants.GeometryTypes.getGeometryType(renderLayer, entityRenderLayer.reflect)
                         .getValue();
@@ -1067,7 +1068,7 @@ public class EntityProxy {
 
                 Identifier
                     identifier =
-                    ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
+                    RenderLayerHelper.getTextureId(renderLayer)
                         .orElse(MissingSprite.getMissingSpriteId());
                 int
                     geometryTypeID =

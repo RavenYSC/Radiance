@@ -1,13 +1,12 @@
 package com.radiance.client.constant;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.radiance.client.vertex.PBRVertexFormats;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexFormat;
 
 public class Constants {
 
@@ -144,15 +143,16 @@ public class Constants {
 
         public static GeometryTypes getGeometryType(RenderLayer renderLayer, boolean reflect) {
             // single objects
-            if (renderLayer.name.contains("water_mask")) {
+            String name = renderLayer.toString();
+            if (name.contains("water_mask")) {
                 return BOAT_WATER_MASK;
-            } else if (renderLayer.name.contains("end_portal")) {
+            } else if (name.contains("end_portal")) {
                 return END_PORTAL;
-            } else if (renderLayer.name.contains("end_gateway")) {
+            } else if (name.contains("end_gateway")) {
                 return END_GATEWAY;
             }
 
-            if (renderLayer.name.contains("cloud")) {
+            if (name.contains("cloud")) {
                 return WORLD_CLOUD;
             }
 
@@ -160,36 +160,15 @@ public class Constants {
                 return WORLD_NO_REFLECT;
             }
 
-            RenderLayer.MultiPhase multiPhase = (RenderLayer.MultiPhase) renderLayer;
-            if (multiPhase.name.contains("solid")) {
+            if (name.contains("solid")) {
                 // solid
                 return WORLD_SOLID;
             }
 
-            if (multiPhase.isTranslucent()) {
-                // transparent
-                if (RenderPhase.NO_TRANSPARENCY.equals(multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.ADDITIVE_TRANSPARENCY.equals(
-                    multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.LIGHTNING_TRANSPARENCY.equals(
-                    multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.GLINT_TRANSPARENCY.equals(multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.CRUMBLING_TRANSPARENCY.equals(
-                    multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.OVERLAY_TRANSPARENCY.equals(
-                    multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else if (RenderPhase.TRANSLUCENT_TRANSPARENCY.equals(
-                    multiPhase.phases.transparency)) {
-                    return WORLD_TRANSPARENT;
-                } else {
-                    throw new IllegalArgumentException("Invalid render layer " + multiPhase);
-                }
+            // In 1.21.11, RenderPhase transparency types were removed.
+            // All transparency variants mapped to WORLD_TRANSPARENT, so we simplify.
+            if (renderLayer.isTranslucent()) {
+                return WORLD_TRANSPARENT;
             } else {
                 // cut out
                 return WORLD_TRANSPARENT;

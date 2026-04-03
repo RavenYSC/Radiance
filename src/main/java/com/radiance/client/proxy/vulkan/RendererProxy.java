@@ -5,7 +5,7 @@ import com.radiance.client.constant.Constants;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.INativeImageExt;
 import java.nio.ByteBuffer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.Window;
 import org.lwjgl.system.MemoryUtil;

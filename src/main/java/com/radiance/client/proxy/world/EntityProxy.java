@@ -1,9 +1,9 @@
 package com.radiance.client.proxy.world;
 
-import static net.minecraft.client.render.VertexFormat.DrawMode.LINES;
-import static net.minecraft.client.render.VertexFormat.DrawMode.LINE_STRIP;
-import static net.minecraft.client.render.VertexFormat.DrawMode.QUADS;
-import static net.minecraft.client.render.VertexFormat.DrawMode.TRIANGLE_STRIP;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.LINES;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.LINE_STRIP;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.QUADS;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.TRIANGLE_STRIP;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
 import com.radiance.client.constant.Constants;

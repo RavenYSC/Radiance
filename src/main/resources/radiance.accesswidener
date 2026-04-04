@@ -24,8 +24,6 @@ accessible field net/minecraft/client/texture/SpriteContents mipmapLevelsImages 
 accessible class net/minecraft/client/texture/SpriteContents$AnimationFrame
 accessible field net/minecraft/client/texture/SpriteContents$AnimationFrame index I
 
-accessible field com/mojang/blaze3d/systems/RenderSystem apiDescription Ljava/lang/String;
-
 accessible class com/mojang/blaze3d/platform/GlStateManager$ScissorTestState
 accessible class com/mojang/blaze3d/platform/GlStateManager$DepthTestState
 
@@ -37,8 +35,6 @@ accessible class com/mojang/blaze3d/platform/GlStateManager$LogicOpState
 accessible class com/mojang/blaze3d/platform/GlStateManager$ColorMask
 accessible class com/mojang/blaze3d/platform/GlStateManager$StencilState
 accessible class com/mojang/blaze3d/platform/GlStateManager$StencilSubState
-
-accessible field com/mojang/blaze3d/systems/RenderSystem shaderLightDirections [Lorg/joml/Vector3f;
 
 accessible class net/minecraft/client/resource/VideoWarningManager$WarningPatternLoader
 

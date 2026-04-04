@@ -15,7 +15,6 @@ import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Fog;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.radiance.client.util.RenderLayerHelper;
 import net.minecraft.client.world.ClientWorld;
@@ -110,20 +109,22 @@ public class BufferProxy {
             bb.putFloat(baseAddr, shaderGlintAlpha);
             baseAddr += Float.BYTES;
 
-            Fog fog = RenderSystem.getShaderFog();
-            float fogStart = fog.start();
+            // In 1.21.11, Fog class was removed. Fog data is now managed through FogRenderer/FogData.
+            // TODO: Integrate with new FogRenderer API for proper fog parameters.
+            // Using default fog values for now.
+            float fogStart = 0.0f;
             bb.putFloat(baseAddr, fogStart);
             baseAddr += Float.BYTES;
 
-            float fogEnd = fog.end();
+            float fogEnd = 1000.0f;
             bb.putFloat(baseAddr, fogEnd);
             baseAddr += Float.BYTES;
 
-            int fogShape = fog.shape().getId();
+            int fogShape = 0; // SPHERE
             bb.putInt(baseAddr, fogShape);
             baseAddr += Integer.BYTES;
 
-            float[] fogColor = {fog.red(), fog.green(), fog.blue(), fog.alpha()};
+            float[] fogColor = {1.0f, 1.0f, 1.0f, 0.0f};
             for (int i = 0; i < 4; i++) {
                 bb.putFloat(baseAddr, fogColor[i]);
                 baseAddr += Float.BYTES;
@@ -151,11 +152,15 @@ public class BufferProxy {
             bb.putFloat(baseAddr, framebufferHeight);
             baseAddr += Float.BYTES;
 
-            Vector3f shaderLightDirection0 = RenderSystem.shaderLightDirections[0];
+            // In 1.21.11, RenderSystem.shaderLightDirections was removed.
+            // Shader light directions are now passed via GPU buffers.
+            // TODO: Integrate with new setShaderLights(GpuBufferSlice) API.
+            // Using default light directions for now.
+            Vector3f shaderLightDirection0 = new Vector3f(0.2f, 1.0f, -0.7f).normalize();
             shaderLightDirection0.get(baseAddr, bb);
             baseAddr += Float.BYTES * 4;
 
-            Vector3f shaderLightDirection1 = RenderSystem.shaderLightDirections[1];
+            Vector3f shaderLightDirection1 = new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
             shaderLightDirection1.get(baseAddr, bb);
 
             updateOverlayDrawUniform(addr);
@@ -202,7 +207,8 @@ public class BufferProxy {
     public static native void updateWorldUniform(long ptr);
 
     public static void updateWorldUniform(Camera camera, Matrix4f viewMatrix,
-        Matrix4f effectedViewMatrix, Matrix4f projectionMatrix, int overlayTextureID, Fog fog,
+        Matrix4f effectedViewMatrix, Matrix4f projectionMatrix, int overlayTextureID,
+        float fogStart, float fogEnd, float fogRed, float fogGreen, float fogBlue, float fogAlpha, int fogShapeId,
         ClientWorld world, int endSkyTextureID, int endPortalTextureID) {
         try (MemoryStack stack = stackPush()) {
             int size = 560;
@@ -238,21 +244,21 @@ public class BufferProxy {
             baseAddr += Integer.BYTES;
             bb.putInt(baseAddr, camera.isThirdPerson() ? 0 : 1);
             baseAddr += Integer.BYTES;
-            bb.putFloat(baseAddr, fog.start());
+            bb.putFloat(baseAddr, fogStart);
             baseAddr += Float.BYTES;
-            bb.putFloat(baseAddr, fog.end());
-            baseAddr += Float.BYTES;
-
-            bb.putFloat(baseAddr, fog.red());
-            baseAddr += Float.BYTES;
-            bb.putFloat(baseAddr, fog.green());
-            baseAddr += Float.BYTES;
-            bb.putFloat(baseAddr, fog.blue());
-            baseAddr += Float.BYTES;
-            bb.putFloat(baseAddr, fog.alpha());
+            bb.putFloat(baseAddr, fogEnd);
             baseAddr += Float.BYTES;
 
-            bb.putInt(baseAddr, fog.shape().getId());
+            bb.putFloat(baseAddr, fogRed);
+            baseAddr += Float.BYTES;
+            bb.putFloat(baseAddr, fogGreen);
+            baseAddr += Float.BYTES;
+            bb.putFloat(baseAddr, fogBlue);
+            baseAddr += Float.BYTES;
+            bb.putFloat(baseAddr, fogAlpha);
+            baseAddr += Float.BYTES;
+
+            bb.putInt(baseAddr, fogShapeId);
             baseAddr += Integer.BYTES;
             bb.putInt(baseAddr, world.getDimensionEffects().getSkyType().ordinal());
             baseAddr += Integer.BYTES;

@@ -7,8 +7,8 @@ import com.radiance.client.proxy.world.EntityProxy;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IGameRendererExt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.ShaderLoader;
-import net.minecraft.client.gl.ShaderProgramKey;
+// import net.minecraft.client.gl.ShaderLoader; // Removed: ShaderLoader.preload signature changed in 1.21.11
+// import net.minecraft.client.gl.ShaderProgramKey; // Removed: class does not exist in 1.21.11
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -21,7 +21,7 @@ import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.client.util.Pool;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceFactory;
-import net.minecraft.client.gl.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector4f;
@@ -57,16 +57,16 @@ public class GameRendererMixins implements IGameRendererExt {
     @Unique
     private Matrix4f viewMatrix;
 
-    @Redirect(method = "preloadPrograms(Lnet/minecraft/resource/ResourceFactory;)V",
-        at = @At(value = "INVOKE",
-            target =
-                "Lnet/minecraft/client/gl/ShaderLoader;preload(Lnet/minecraft/resource/ResourceFactory;"
-                    +
-                    "[Lnet/minecraft/client/gl/ShaderProgramKey;)V"))
-    public void cancelPreloadShader(ShaderLoader instance, ResourceFactory factory,
-        ShaderProgramKey[] keys) {
-
-    }
+    // Disabled: ShaderLoader.preload(ResourceFactory, ShaderProgramKey[]) does not exist in 1.21.11
+    // @Redirect(method = "preloadPrograms(Lnet/minecraft/resource/ResourceFactory;)V",
+    //     at = @At(value = "INVOKE",
+    //         target =
+    //             "Lnet/minecraft/client/gl/ShaderLoader;preload(Lnet/minecraft/resource/ResourceFactory;"
+    //                 +
+    //                 "[Lnet/minecraft/client/gl/ShaderProgramKey;)V"))
+    // public void cancelPreloadShader(ShaderLoader instance, ResourceFactory factory,
+    //     ShaderProgramKey[] keys) {
+    // }
 
     @Inject(method = "renderBlur()V", at = @At(value = "HEAD"), cancellable = true)
     public void redirectRenderBlur(CallbackInfo ci) {
@@ -97,7 +97,7 @@ public class GameRendererMixins implements IGameRendererExt {
                     +
                     "Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;"
                     +
-                    "Lnet/minecraft/client/gl/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"))
+                    "Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"))
     public void performBTimesV(WorldRenderer instance,
         ObjectAllocator allocator,
         RenderTickCounter tickCounter,

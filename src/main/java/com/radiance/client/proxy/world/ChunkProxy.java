@@ -9,6 +9,7 @@ import com.radiance.client.constant.Constants;
 import com.radiance.client.proxy.vulkan.BufferProxy;
 import com.radiance.client.util.ChunkLightCollector;
 import com.radiance.client.util.RenderLayerHelper;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderBuiltChunkExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderExt;
 import java.nio.ByteBuffer;
@@ -336,10 +337,9 @@ public class ChunkProxy {
                             .getValue();
                     int
                         geometryTextureID =
-                        textureManager.getTexture(
+                        IAbstractTextureExt.getGlId(textureManager.getTexture(
                                 RenderLayerHelper.getTextureId(renderLayer)
-                                    .orElse(MissingSprite.getMissingSpriteId()))
-                            .getGlId();
+                                    .orElse(MissingSprite.getMissingSpriteId())));
                     int vertexFormatID = Constants.VertexFormats.getValue(
                         vertexBuffer.getDrawParameters()
                             .format());

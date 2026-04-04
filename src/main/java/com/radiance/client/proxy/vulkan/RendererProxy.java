@@ -1,6 +1,5 @@
 package com.radiance.client.proxy.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.constant.Constants;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.INativeImageExt;
 import java.nio.ByteBuffer;

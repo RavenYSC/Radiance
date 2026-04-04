@@ -86,7 +86,7 @@ public class Constants {
             net.minecraft.client.render.VertexFormats.POSITION_TEXTURE_COLOR_LIGHT, 2),
         POSITION(net.minecraft.client.render.VertexFormats.POSITION, 3),
         POSITION_COLOR(net.minecraft.client.render.VertexFormats.POSITION_COLOR, 4),
-        LINES(net.minecraft.client.render.VertexFormats.LINES, 5),
+        LINES(net.minecraft.client.render.VertexFormats.POSITION_COLOR_NORMAL_LINE_WIDTH, 5),
         POSITION_COLOR_LIGHT(net.minecraft.client.render.VertexFormats.POSITION_COLOR_LIGHT, 6),
         POSITION_TEXTURE(net.minecraft.client.render.VertexFormats.POSITION_TEXTURE, 7),
         POSITION_TEXTURE_COLOR(net.minecraft.client.render.VertexFormats.POSITION_TEXTURE_COLOR, 8),

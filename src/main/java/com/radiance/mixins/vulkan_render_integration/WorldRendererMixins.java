@@ -8,6 +8,7 @@ import com.radiance.client.proxy.world.ChunkProxy;
 import com.radiance.client.proxy.world.EntityProxy;
 import com.radiance.client.proxy.world.PlayerProxy;
 import com.radiance.client.vertex.StorageVertexConsumerProvider;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IGameRendererExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.ILightMapManagerExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IOverlayTextureExt;
@@ -199,12 +200,10 @@ public abstract class WorldRendererMixins {
 
         TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
         OverlayTexture overlayTexture = gameRenderer.getOverlayTexture();
-        int overlayTextureID = ((IOverlayTextureExt) overlayTexture).neoVoxelRT$getTexture()
-            .getGlId();
-        int endSkyTextureID = textureManager.getTexture(EndPortalBlockEntityRenderer.SKY_TEXTURE)
-            .getGlId();
-        int endPortalTextureID = textureManager.getTexture(
-            EndPortalBlockEntityRenderer.PORTAL_TEXTURE).getGlId();
+        int overlayTextureID = IAbstractTextureExt.getGlId(((IOverlayTextureExt) overlayTexture).neoVoxelRT$getTexture());
+        int endSkyTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(EndPortalBlockEntityRenderer.SKY_TEXTURE));
+        int endPortalTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(
+            EndPortalBlockEntityRenderer.PORTAL_TEXTURE));
         BufferProxy.updateWorldUniform(camera, viewMatrix, effectedViewMatrix, projectionMatrix,
             overlayTextureID, fogStart, fogEnd, fogRed, fogGreen, fogBlue, fogAlpha, fogShapeId,
             world, endSkyTextureID, endPortalTextureID);
@@ -312,9 +311,9 @@ public abstract class WorldRendererMixins {
 
         float rainGradient = this.world.getRainGradient(tickDelta);
 
-        int sunTextureID = textureManager.getTexture(SkyRendering.SUN_TEXTURE).getGlId();
+        int sunTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(SkyRendering.SUN_TEXTURE));
 
-        int moonTextureID = textureManager.getTexture(SkyRendering.MOON_PHASES_TEXTURE).getGlId();
+        int moonTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(SkyRendering.MOON_PHASES_TEXTURE));
 
         CloudRenderMode cloudRenderMode = this.client.options.getCloudRenderModeValue();
         float cloudBaseHeight = Float.NaN;

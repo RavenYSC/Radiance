@@ -12,6 +12,7 @@ import com.radiance.client.proxy.vulkan.BufferProxy;
 import com.radiance.client.util.RenderLayerHelper;
 import com.radiance.client.vertex.PBRVertexConsumer;
 import com.radiance.client.vertex.StorageVertexConsumerProvider;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IHeldItemRendererExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IParticleManagerExt;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -873,7 +874,7 @@ public class EntityProxy {
                         .orElse(MissingSprite.getMissingSpriteId());
                     int geometryTypeID = Constants.GeometryTypes.getGeometryType(renderLayer, entityRenderLayer.reflect)
                         .getValue();
-                    int geometryTextureID = textureManager.getTexture(identifier).getGlId();
+                    int geometryTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(identifier));
                     int vertexFormatID = Constants.VertexFormats.getValue(vertexBuffer.getDrawParameters().format());
                     int indexFormatID = Constants.DrawModes.getValue(vertexBuffer.getDrawParameters().mode());
 
@@ -1076,8 +1077,7 @@ public class EntityProxy {
                         .getValue();
                 int
                     geometryTextureID =
-                    textureManager.getTexture(identifier)
-                        .getGlId();
+                    IAbstractTextureExt.getGlId(textureManager.getTexture(identifier));
                 int
                     vertexFormatID =
                     Constants.VertexFormats.getValue(vertexBuffer.getDrawParameters()

@@ -27,6 +27,7 @@ import net.minecraft.client.render.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.radiance.client.util.RenderLayerHelper;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
@@ -87,10 +88,9 @@ public class PBRVertexConsumer implements VertexConsumer {
         Identifier identifier = RenderLayerHelper.getTextureId(renderLayer)
             .orElse(MissingSprite.getMissingSpriteId());
         textureID =
-            MinecraftClient.getInstance()
+            IAbstractTextureExt.getGlId(MinecraftClient.getInstance()
                 .getTextureManager()
-                .getTexture(identifier)
-                .getGlId();
+                .getTexture(identifier));
     }
 
     private static void putInt(long ptr, int v) {
@@ -408,10 +408,9 @@ public class PBRVertexConsumer implements VertexConsumer {
             Identifier identifier = RenderLayerHelper.getTextureId(glintRenderLayer)
                 .orElse(MissingSprite.getMissingSpriteId());
             glintTextureID =
-                MinecraftClient.getInstance()
+                IAbstractTextureExt.getGlId(MinecraftClient.getInstance()
                     .getTextureManager()
-                    .getTexture(identifier)
-                    .getGlId();
+                    .getTexture(identifier));
         }
 
         @Override
@@ -481,10 +480,9 @@ public class PBRVertexConsumer implements VertexConsumer {
             Identifier identifier = RenderLayerHelper.getTextureId(glintRenderLayer)
                 .orElse(MissingSprite.getMissingSpriteId());
             glintTextureID =
-                MinecraftClient.getInstance()
+                IAbstractTextureExt.getGlId(MinecraftClient.getInstance()
                     .getTextureManager()
-                    .getTexture(identifier)
-                    .getGlId();
+                    .getTexture(identifier));
 
             this.inverseTextureMatrix = new Matrix4f(matrix.getPositionMatrix()).invert();
             this.inverseNormalMatrix = new Matrix3f(matrix.getNormalMatrix()).invert();

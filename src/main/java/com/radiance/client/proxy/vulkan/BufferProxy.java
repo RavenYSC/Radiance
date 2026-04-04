@@ -6,7 +6,6 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 import static org.lwjgl.system.MemoryUtil.memSet;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.constant.Constants;
 import com.radiance.client.texture.TextureTracker;
 import java.nio.ByteBuffer;
@@ -85,61 +84,58 @@ public class BufferProxy {
             long addr = memAddress(bb);
             int baseAddr = 0;
 
+            // In 1.21.11, many RenderSystem static state getters were removed.
+            // The rendering pipeline moved to GPU buffer-based uniforms.
+            // TODO: Integrate with the new RenderPass/CommandEncoder system for proper values.
+
+            // Shader textures (12 slots) - defaults to 0
             for (int i = 0; i < 12; i++) {
-                int texture = RenderSystem.getShaderTexture(i);
-                bb.putInt(baseAddr, texture);
+                bb.putInt(baseAddr, 0);
                 baseAddr += Integer.BYTES;
             }
 
-            Matrix4f modelViewMat = RenderSystem.getModelViewMatrix();
-            modelViewMat.get(baseAddr, bb);
+            // Model view matrix - identity
+            new Matrix4f().get(baseAddr, bb);
             baseAddr += Float.BYTES * 16;
 
-            Matrix4f projectionMatrix = RenderSystem.getProjectionMatrix();
-            projectionMatrix.get(baseAddr, bb);
+            // Projection matrix - identity
+            new Matrix4f().get(baseAddr, bb);
             baseAddr += Float.BYTES * 16;
 
-            float[] shaderColor = RenderSystem.getShaderColor();
+            // Shader color - white
+            float[] shaderColor = {1.0f, 1.0f, 1.0f, 1.0f};
             for (int i = 0; i < 4; i++) {
                 bb.putFloat(baseAddr, shaderColor[i]);
                 baseAddr += Float.BYTES;
             }
 
-            float shaderGlintAlpha = RenderSystem.getShaderGlintAlpha();
-            bb.putFloat(baseAddr, shaderGlintAlpha);
+            // Glint alpha
+            bb.putFloat(baseAddr, 1.0f);
             baseAddr += Float.BYTES;
 
-            // In 1.21.11, Fog class was removed. Fog data is now managed through FogRenderer/FogData.
-            // TODO: Integrate with new FogRenderer API for proper fog parameters.
-            // Using default fog values for now.
-            float fogStart = 0.0f;
-            bb.putFloat(baseAddr, fogStart);
+            // Fog parameters - defaults
+            bb.putFloat(baseAddr, 0.0f); // fogStart
             baseAddr += Float.BYTES;
-
-            float fogEnd = 1000.0f;
-            bb.putFloat(baseAddr, fogEnd);
+            bb.putFloat(baseAddr, 1000.0f); // fogEnd
             baseAddr += Float.BYTES;
-
-            int fogShape = 0; // SPHERE
-            bb.putInt(baseAddr, fogShape);
+            bb.putInt(baseAddr, 0); // fogShape (SPHERE)
             baseAddr += Integer.BYTES;
-
             float[] fogColor = {1.0f, 1.0f, 1.0f, 0.0f};
             for (int i = 0; i < 4; i++) {
                 bb.putFloat(baseAddr, fogColor[i]);
                 baseAddr += Float.BYTES;
             }
 
-            Matrix4f textureMat = RenderSystem.getTextureMatrix();
-            textureMat.get(baseAddr, bb);
+            // Texture matrix - identity
+            new Matrix4f().get(baseAddr, bb);
             baseAddr += Float.BYTES * 16;
 
-            float gameTime = RenderSystem.getShaderGameTime();
-            bb.putFloat(baseAddr, gameTime);
+            // Game time - 0
+            bb.putFloat(baseAddr, 0.0f);
             baseAddr += Float.BYTES;
 
-            float lineWidth = RenderSystem.getShaderLineWidth();
-            bb.putFloat(baseAddr, lineWidth);
+            // Line width - 1
+            bb.putFloat(baseAddr, 1.0f);
             baseAddr += Float.BYTES;
 
             float framebufferWidth = MinecraftClient.getInstance().getWindow()
@@ -152,10 +148,7 @@ public class BufferProxy {
             bb.putFloat(baseAddr, framebufferHeight);
             baseAddr += Float.BYTES;
 
-            // In 1.21.11, RenderSystem.shaderLightDirections was removed.
-            // Shader light directions are now passed via GPU buffers.
-            // TODO: Integrate with new setShaderLights(GpuBufferSlice) API.
-            // Using default light directions for now.
+            // Light directions - defaults
             Vector3f shaderLightDirection0 = new Vector3f(0.2f, 1.0f, -0.7f).normalize();
             shaderLightDirection0.get(baseAddr, bb);
             baseAddr += Float.BYTES * 4;
@@ -228,17 +221,17 @@ public class BufferProxy {
             baseAddr += Float.BYTES * 16 * 3; // skip the inverse
             baseAddr += Float.BYTES * 2; // skip the jitter
 
-            float gameTime = RenderSystem.getShaderGameTime();
+            // In 1.21.11, RenderSystem.getShaderGameTime() was removed.
+            // TODO: Compute game time from world tick count instead.
+            float gameTime = 0.0f;
             bb.putFloat(baseAddr, gameTime);
             baseAddr += Float.BYTES;
 
             baseAddr += Integer.BYTES; // skip seed
 
-            RenderLayerHelper.setupGlintTexturing(0.16F);
-            Matrix4f textureMat = RenderSystem.getTextureMatrix();
+            Matrix4f textureMat = RenderLayerHelper.computeGlintTextureMatrix(0.16F);
             textureMat.get(baseAddr, bb);
             baseAddr += Float.BYTES * 16;
-            RenderSystem.resetTextureMatrix();
 
             bb.putInt(baseAddr, overlayTextureID);
             baseAddr += Integer.BYTES;

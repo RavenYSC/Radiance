@@ -68,10 +68,13 @@ public class RenderLayerHelper {
     /**
      * Sets up the glint texture matrix.
      * Replaces the removed RenderPhase.setupGlintTexturing() method.
+     * Returns the computed texture matrix instead of setting it on RenderSystem
+     * (setTextureMatrix was removed in 1.21.11).
      *
      * @param scale the texture scale factor
+     * @return the computed glint texture matrix
      */
-    public static void setupGlintTexturing(float scale) {
+    public static org.joml.Matrix4f computeGlintTextureMatrix(float scale) {
         long time = net.minecraft.util.Util.getMeasuringTimeMs()
             * net.minecraft.client.MinecraftClient.getInstance().options.getGlintSpeed().getValue().longValue();
         float f = (float) (time % 110000L) / 110000.0F;
@@ -79,6 +82,6 @@ public class RenderLayerHelper {
         org.joml.Matrix4f matrix4f = new org.joml.Matrix4f()
             .translation(-f, g, 0.0F);
         matrix4f.rotateZ(0.17453292F).scale(scale, scale, scale);
-        com.mojang.blaze3d.systems.RenderSystem.setTextureMatrix(matrix4f);
+        return matrix4f;
     }
 }

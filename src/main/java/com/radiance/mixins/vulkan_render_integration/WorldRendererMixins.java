@@ -1,6 +1,5 @@
 package com.radiance.mixins.vulkan_render_integration;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.UnsafeManager;
 import com.radiance.client.option.Options;
 import com.radiance.client.cloud.CloudTileManager;
@@ -164,7 +163,8 @@ public abstract class WorldRendererMixins {
         PlayerProxy.setCameraPos(camera.getPos());
 
         float f = tickCounter.getTickDelta(false);
-        RenderSystem.setShaderGameTime(this.world.getTime(), f);
+        // RenderSystem.setShaderGameTime was removed in 1.21.11
+        // Game time is now managed through GPU buffer uniforms
         this.blockEntityRenderManager.configure(this.world, camera, this.client.crosshairTarget);
         this.entityRenderManager.configure(this.world, camera, this.client.targetedEntity);
 
@@ -386,8 +386,9 @@ public abstract class WorldRendererMixins {
                 float ticks = (float) this.ticks + f;
                 int color = this.world.getCloudsColor(f);
                 float cloudHeight = vanillaCloudsHeight + 0.33F + Options.getCloudHeightOffset(envDim);
-                this.cloudRenderer.renderClouds(color, cloudRenderMode, cloudHeight, null, null,
-                    camera.getPos(), ticks);
+                // 1.21.11: renderClouds signature changed - Matrix4f params removed, long param added
+                this.cloudRenderer.renderClouds(color, cloudRenderMode, cloudHeight,
+                    camera.getPos(), 0L, ticks);
             }
         }
 

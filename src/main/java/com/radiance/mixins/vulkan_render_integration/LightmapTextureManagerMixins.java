@@ -81,8 +81,8 @@ public abstract class LightmapTextureManagerMixins implements ILightMapManagerEx
                     this.client.options.getDarknessEffectScale()
                         .getValue()
                         .floatValue();
-                // getDarknessFactor was removed in 1.21.11; use 0.0 as default darkness factor
-                float i = 0.0F * h;
+                // getDarknessFactor was removed in 1.21.11; darkness factor defaults to 0
+                float i = 0.0F;
                 float darknessScale = this.getDarkness(this.client.player, i, delta) * h;
                 float k = this.client.player.getUnderwaterVisibility();
                 float nightVisionFactor;

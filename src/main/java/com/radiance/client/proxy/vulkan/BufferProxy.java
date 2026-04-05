@@ -222,8 +222,8 @@ public class BufferProxy {
             baseAddr += Float.BYTES * 2; // skip the jitter
 
             // In 1.21.11, RenderSystem.getShaderGameTime() was removed.
-            // TODO: Compute game time from world tick count instead.
-            float gameTime = 0.0f;
+            // Compute game time from world tick count, matching the old RenderSystem formula.
+            float gameTime = (float)(world.getTime() % 24000L) / 24000.0f;
             bb.putFloat(baseAddr, gameTime);
             baseAddr += Float.BYTES;
 

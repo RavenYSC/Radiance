@@ -1,16 +1,18 @@
 package com.radiance.client.proxy.world;
 
-import static net.minecraft.client.render.VertexFormat.DrawMode.LINES;
-import static net.minecraft.client.render.VertexFormat.DrawMode.LINE_STRIP;
-import static net.minecraft.client.render.VertexFormat.DrawMode.QUADS;
-import static net.minecraft.client.render.VertexFormat.DrawMode.TRIANGLE_STRIP;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.LINES;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.LINE_STRIP;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.QUADS;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.TRIANGLE_STRIP;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
 import com.radiance.client.constant.Constants;
 import com.radiance.client.constant.Constants.RayTracingFlags;
 import com.radiance.client.proxy.vulkan.BufferProxy;
+import com.radiance.client.util.RenderLayerHelper;
 import com.radiance.client.vertex.PBRVertexConsumer;
 import com.radiance.client.vertex.StorageVertexConsumerProvider;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IHeldItemRendererExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IParticleManagerExt;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -868,11 +870,11 @@ public class EntityProxy {
                     RenderLayer renderLayer = entityRenderLayer.renderLayer;
                     BuiltBuffer vertexBuffer = entityRenderLayer.builtBuffer;
 
-                    Identifier identifier = ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
+                    Identifier identifier = RenderLayerHelper.getTextureId(renderLayer)
                         .orElse(MissingSprite.getMissingSpriteId());
                     int geometryTypeID = Constants.GeometryTypes.getGeometryType(renderLayer, entityRenderLayer.reflect)
                         .getValue();
-                    int geometryTextureID = textureManager.getTexture(identifier).getGlId();
+                    int geometryTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(identifier));
                     int vertexFormatID = Constants.VertexFormats.getValue(vertexBuffer.getDrawParameters().format());
                     int indexFormatID = Constants.DrawModes.getValue(vertexBuffer.getDrawParameters().mode());
 
@@ -1067,7 +1069,7 @@ public class EntityProxy {
 
                 Identifier
                     identifier =
-                    ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
+                    RenderLayerHelper.getTextureId(renderLayer)
                         .orElse(MissingSprite.getMissingSpriteId());
                 int
                     geometryTypeID =
@@ -1075,8 +1077,7 @@ public class EntityProxy {
                         .getValue();
                 int
                     geometryTextureID =
-                    textureManager.getTexture(identifier)
-                        .getGlId();
+                    IAbstractTextureExt.getGlId(textureManager.getTexture(identifier));
                 int
                     vertexFormatID =
                     Constants.VertexFormats.getValue(vertexBuffer.getDrawParameters()

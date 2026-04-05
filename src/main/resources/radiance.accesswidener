@@ -24,8 +24,6 @@ accessible field net/minecraft/client/texture/SpriteContents mipmapLevelsImages 
 accessible class net/minecraft/client/texture/SpriteContents$AnimationFrame
 accessible field net/minecraft/client/texture/SpriteContents$AnimationFrame index I
 
-accessible field com/mojang/blaze3d/systems/RenderSystem apiDescription Ljava/lang/String;
-
 accessible class com/mojang/blaze3d/platform/GlStateManager$ScissorTestState
 accessible class com/mojang/blaze3d/platform/GlStateManager$DepthTestState
 
@@ -38,27 +36,20 @@ accessible class com/mojang/blaze3d/platform/GlStateManager$ColorMask
 accessible class com/mojang/blaze3d/platform/GlStateManager$StencilState
 accessible class com/mojang/blaze3d/platform/GlStateManager$StencilSubState
 
-accessible field com/mojang/blaze3d/systems/RenderSystem shaderLightDirections [Lorg/joml/Vector3f;
-
 accessible class net/minecraft/client/resource/VideoWarningManager$WarningPatternLoader
 
 accessible class net/minecraft/client/render/chunk/ChunkRendererRegionBuilder$ClientChunk
 accessible method net/minecraft/client/render/BuiltChunkStorage getRenderedChunk (Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;
-# TODO: 1.21.11 - RenderLayer$MultiPhase was replaced by new RenderSetup system. These entries need rework.
-# accessible class net/minecraft/client/render/RenderLayer$MultiPhase
-# accessible field net/minecraft/client/render/RenderLayer$MultiPhase phases Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;
 
 accessible class net/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk$RebuildTask
 accessible class net/minecraft/client/render/chunk/ChunkBuilder$Result
 
-# TODO: 1.21.11 - RenderPhase was restructured. These entries need rework.
-# accessible method net/minecraft/client/render/RenderPhase$Texture getId ()Ljava/util/Optional;
-# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters texture Lnet/minecraft/client/render/RenderPhase$TextureBase;
-# accessible method net/minecraft/client/render/RenderPhase$TextureBase getId ()Ljava/util/Optional;
-# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters transparency Lnet/minecraft/client/render/RenderPhase$Transparency;
-# accessible field net/minecraft/client/render/RenderPhase name Ljava/lang/String;
-# accessible field net/minecraft/client/render/RenderLayer$MultiPhaseParameters cull Lnet/minecraft/client/render/RenderPhase$Cull;
-# accessible method net/minecraft/client/render/RenderPhase setupGlintTexturing (F)V
+# 1.21.11 - RenderSetup system replaces RenderPhase/MultiPhase
+accessible field net/minecraft/client/render/RenderLayer renderSetup Lnet/minecraft/client/render/RenderSetup;
+accessible field net/minecraft/client/render/RenderSetup textures Ljava/util/Map;
+accessible method net/minecraft/client/render/RenderSetup resolveTextures ()Ljava/util/Map;
+accessible field net/minecraft/client/render/RenderLayer name Ljava/lang/String;
+
 accessible method net/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk setNoCullingBlockEntities (Ljava/util/Collection;)V
 accessible method net/minecraft/client/render/item/HeldItemRenderer getHandRenderType (Lnet/minecraft/client/network/ClientPlayerEntity;)Lnet/minecraft/client/render/item/HeldItemRenderer$HandRenderType;
 accessible field net/minecraft/client/render/item/HeldItemRenderer$HandRenderType renderMainHand Z

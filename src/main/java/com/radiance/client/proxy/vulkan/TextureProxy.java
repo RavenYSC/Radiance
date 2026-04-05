@@ -1,7 +1,6 @@
 package com.radiance.client.proxy.vulkan;
 
 import com.radiance.client.constant.VulkanConstants;
-import net.minecraft.client.texture.NativeImage;
 
 public class TextureProxy {
 
@@ -34,22 +33,24 @@ public class TextureProxy {
     // OMM: 0 = FULLY_OPAQUE, 1 = FULLY_TRANSPARENT, 2 = MIXED
     public synchronized static native void setTextureAlphaClass(int id, int alphaClass);
 
-    public static void prepareImage(NativeImage.InternalFormat internalFormat, int id,
+    // In 1.21.11, NativeImage.InternalFormat was removed.
+    // Using channelCount from NativeImage.Format instead.
+    public static void prepareImage(int channelCount, int id,
         int mipLevels, int width, int height) {
-        switch (internalFormat) {
-            case RGBA:
+        switch (channelCount) {
+            case 4:
                 prepareImage(id, mipLevels, width, height,
                     VulkanConstants.VkFormat.VK_FORMAT_R8G8B8A8_SRGB);
                 break;
-            case RGB:
+            case 3:
                 prepareImage(id, mipLevels, width, height,
                     VulkanConstants.VkFormat.VK_FORMAT_R8G8B8_SRGB);
                 break;
-            case RG:
+            case 2:
                 prepareImage(id, mipLevels, width, height,
                     VulkanConstants.VkFormat.VK_FORMAT_R8G8_SRGB);
                 break;
-            case RED:
+            case 1:
                 prepareImage(id, mipLevels, width, height,
                     VulkanConstants.VkFormat.VK_FORMAT_R8_SRGB);
                 break;

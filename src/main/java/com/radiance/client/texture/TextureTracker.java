@@ -25,28 +25,20 @@ public class TextureTracker {
             }
         }
 
-        public Texture(int width, int height, NativeImage.InternalFormat format, int maxLayer) {
-            this(width, height, getChannel(format), getFormat(format), maxLayer);
+        // In 1.21.11, NativeImage.InternalFormat was removed.
+        // Using NativeImage.Format with channelCount for compatibility.
+        public Texture(int width, int height, NativeImage.Format format, int maxLayer) {
+            this(width, height, format.getChannelCount(), getFormat(format.getChannelCount()), maxLayer);
         }
 
-        private static int getChannel(NativeImage.InternalFormat internalFormat) {
-            return switch (internalFormat) {
-                case RGBA -> 4;
-                case RGB -> 3;
-                case RG -> 2;
-                case RED -> 1;
+        private static VulkanConstants.VkFormat getFormat(int channelCount) {
+            return switch (channelCount) {
+                case 4 -> VulkanConstants.VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
+                case 3 -> VulkanConstants.VkFormat.VK_FORMAT_R8G8B8_SRGB;
+                case 2 -> VulkanConstants.VkFormat.VK_FORMAT_R8G8_SRGB;
+                case 1 -> VulkanConstants.VkFormat.VK_FORMAT_R8_SRGB;
                 default -> throw new IllegalArgumentException(
-                    "Unknown internal format: " + internalFormat);
-            };
-        }
-
-        private static VulkanConstants.VkFormat getFormat(
-            NativeImage.InternalFormat internalFormat) {
-            return switch (internalFormat) {
-                case RGBA -> VulkanConstants.VkFormat.VK_FORMAT_R8G8B8A8_SRGB;
-                case RGB -> VulkanConstants.VkFormat.VK_FORMAT_R8G8B8_SRGB;
-                case RG -> VulkanConstants.VkFormat.VK_FORMAT_R8G8_SRGB;
-                case RED -> VulkanConstants.VkFormat.VK_FORMAT_R8_SRGB;
+                    "Unknown channel count: " + channelCount);
             };
         }
     }

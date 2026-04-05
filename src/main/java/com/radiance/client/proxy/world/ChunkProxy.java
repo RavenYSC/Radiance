@@ -1,6 +1,6 @@
 package com.radiance.client.proxy.world;
 
-import static net.minecraft.client.render.VertexFormat.DrawMode.QUADS;
+import static com.mojang.blaze3d.vertex.VertexFormat.DrawMode.QUADS;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
@@ -8,6 +8,8 @@ import com.mojang.blaze3d.systems.VertexSorter;
 import com.radiance.client.constant.Constants;
 import com.radiance.client.proxy.vulkan.BufferProxy;
 import com.radiance.client.util.ChunkLightCollector;
+import com.radiance.client.util.RenderLayerHelper;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderBuiltChunkExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IChunkBuilderExt;
 import java.nio.ByteBuffer;
@@ -335,10 +337,9 @@ public class ChunkProxy {
                             .getValue();
                     int
                         geometryTextureID =
-                        textureManager.getTexture(
-                                ((RenderLayer.MultiPhase) renderLayer).phases.texture.getId()
-                                    .orElse(MissingSprite.getMissingSpriteId()))
-                            .getGlId();
+                        IAbstractTextureExt.getGlId(textureManager.getTexture(
+                                RenderLayerHelper.getTextureId(renderLayer)
+                                    .orElse(MissingSprite.getMissingSpriteId())));
                     int vertexFormatID = Constants.VertexFormats.getValue(
                         vertexBuffer.getDrawParameters()
                             .format());

@@ -1,6 +1,7 @@
 package com.radiance.mixins.vanilla_resource_tracker;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vanilla_resource_tracker.INativeImageExt;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.texture.NativeImage;
@@ -21,7 +22,7 @@ public abstract class OverlayTextureMixins {
 
     @Inject(method = "<init>()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/NativeImage;upload(IIIIIIIZ)V"))
     public void setImageTargetIDBeforeUpload(CallbackInfo ci, @Local NativeImage nativeImage) {
-        int id = texture.getGlId();
+        int id = IAbstractTextureExt.getGlId(texture);
         ((INativeImageExt) (Object) nativeImage).neoVoxelRT$setTargetID(id);
     }
 }

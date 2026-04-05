@@ -1,6 +1,5 @@
 package com.radiance.mixins.vulkan_render_integration;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.UnsafeManager;
 import com.radiance.client.option.Options;
 import com.radiance.client.cloud.CloudTileManager;
@@ -9,6 +8,7 @@ import com.radiance.client.proxy.world.ChunkProxy;
 import com.radiance.client.proxy.world.EntityProxy;
 import com.radiance.client.proxy.world.PlayerProxy;
 import com.radiance.client.vertex.StorageVertexConsumerProvider;
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IGameRendererExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.ILightMapManagerExt;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.IOverlayTextureExt;
@@ -18,15 +18,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.option.CloudRenderMode;
-import net.minecraft.client.render.BackgroundRenderer;
+// FogRenderer moved to net.minecraft.client.render.fog.FogRenderer in 1.21.11
 import net.minecraft.client.render.BuiltChunkStorage;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.ChunkRenderingDataPreparer;
 import net.minecraft.client.render.CloudRenderer;
 import net.minecraft.client.render.DimensionEffects;
-import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.OverlayTexture;
@@ -153,7 +152,7 @@ public abstract class WorldRendererMixins {
     @Inject(method =
         "render(Lnet/minecraft/client/util/ObjectAllocator;Lnet/minecraft/client/render/RenderTickCounter;"
             + "ZLnet/minecraft/client/render/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;"
-            + "Lorg/joml/Matrix4f;Lnet/minecraft/client/gl/GpuBufferSlice;Lorg/joml/Vector4f;Z)V",
+            + "Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V",
         at = @At("HEAD"), cancellable = true)
     public void redirectRender(ObjectAllocator allocator, RenderTickCounter tickCounter,
         boolean renderBlockOutline, Camera camera,
@@ -165,7 +164,8 @@ public abstract class WorldRendererMixins {
         PlayerProxy.setCameraPos(camera.getPos());
 
         float f = tickCounter.getTickDelta(false);
-        RenderSystem.setShaderGameTime(this.world.getTime(), f);
+        // RenderSystem.setShaderGameTime was removed in 1.21.11
+        // Game time is now managed through GPU buffer uniforms
         this.blockEntityRenderManager.configure(this.world, camera, this.client.crosshairTarget);
         this.entityRenderManager.configure(this.world, camera, this.client.targetedEntity);
 
@@ -181,26 +181,32 @@ public abstract class WorldRendererMixins {
             ((IGameRendererExt) gameRenderer).neoVoxelRT$getRotationMatrix());
         Matrix4f effectedViewMatrix = new Matrix4f(effectedRotationMatrix);
 
-        // fog
+        // fog - In 1.21.11, BackgroundRenderer was renamed to FogRenderer and moved to fog subpackage.
+        // FogRenderer.applyFog returns Vector4f instead of Fog, and the Fog class was removed.
         float h = gameRenderer.getViewDistanceBlocks();
         boolean bl2 = this.client.world.getDimensionEffects()
             .useThickFog(MathHelper.floor(x), MathHelper.floor(y))
             || this.client.inGameHud.getBossBarHud().shouldThickenFog();
-        Vector4f vector4f = BackgroundRenderer.getFogColor(camera, f, this.client.world,
-            this.client.options.getClampedViewDistance(), gameRenderer.getSkyDarkness(f));
-        Fog fog = BackgroundRenderer.applyFog(camera, BackgroundRenderer.FogType.FOG_TERRAIN,
-            vector4f, h, bl2, f);
+        // Use the fogColorVec parameter passed to the render method instead
+        float fogRed = fogColorVec.x();
+        float fogGreen = fogColorVec.y();
+        float fogBlue = fogColorVec.z();
+        float fogAlpha = fogColorVec.w();
+        // Default fog parameters - the actual fog distances come from FogData/FogRenderer
+        // which manages fog via GPU buffers in 1.21.11
+        float fogStart = bl2 ? h * 0.05f : h * 0.75f;
+        float fogEnd = h;
+        int fogShapeId = 0; // SPHERE
 
         TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
         OverlayTexture overlayTexture = gameRenderer.getOverlayTexture();
-        int overlayTextureID = ((IOverlayTextureExt) overlayTexture).neoVoxelRT$getTexture()
-            .getGlId();
-        int endSkyTextureID = textureManager.getTexture(EndPortalBlockEntityRenderer.SKY_TEXTURE)
-            .getGlId();
-        int endPortalTextureID = textureManager.getTexture(
-            EndPortalBlockEntityRenderer.PORTAL_TEXTURE).getGlId();
+        int overlayTextureID = IAbstractTextureExt.getGlId(((IOverlayTextureExt) overlayTexture).neoVoxelRT$getTexture());
+        int endSkyTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(EndPortalBlockEntityRenderer.SKY_TEXTURE));
+        int endPortalTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(
+            EndPortalBlockEntityRenderer.PORTAL_TEXTURE));
         BufferProxy.updateWorldUniform(camera, viewMatrix, effectedViewMatrix, projectionMatrix,
-            overlayTextureID, fog, world, endSkyTextureID, endPortalTextureID);
+            overlayTextureID, fogStart, fogEnd, fogRed, fogGreen, fogBlue, fogAlpha, fogShapeId,
+            world, endSkyTextureID, endPortalTextureID);
 
         // Sky
         float tickDelta = tickCounter.getTickDelta(false);
@@ -305,9 +311,9 @@ public abstract class WorldRendererMixins {
 
         float rainGradient = this.world.getRainGradient(tickDelta);
 
-        int sunTextureID = textureManager.getTexture(SkyRendering.SUN_TEXTURE).getGlId();
+        int sunTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(SkyRendering.SUN_TEXTURE));
 
-        int moonTextureID = textureManager.getTexture(SkyRendering.MOON_PHASES_TEXTURE).getGlId();
+        int moonTextureID = IAbstractTextureExt.getGlId(textureManager.getTexture(SkyRendering.MOON_PHASES_TEXTURE));
 
         CloudRenderMode cloudRenderMode = this.client.options.getCloudRenderModeValue();
         float cloudBaseHeight = Float.NaN;
@@ -379,8 +385,9 @@ public abstract class WorldRendererMixins {
                 float ticks = (float) this.ticks + f;
                 int color = this.world.getCloudsColor(f);
                 float cloudHeight = vanillaCloudsHeight + 0.33F + Options.getCloudHeightOffset(envDim);
-                this.cloudRenderer.renderClouds(color, cloudRenderMode, cloudHeight, null, null,
-                    camera.getPos(), ticks);
+                // 1.21.11: renderClouds signature changed - Matrix4f params removed, long param added
+                this.cloudRenderer.renderClouds(color, cloudRenderMode, cloudHeight,
+                    camera.getPos(), 0L, ticks);
             }
         }
 

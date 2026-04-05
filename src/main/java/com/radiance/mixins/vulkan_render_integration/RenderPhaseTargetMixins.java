@@ -1,20 +1,12 @@
 package com.radiance.mixins.vulkan_render_integration;
 
-import net.minecraft.client.render.RenderPhase;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-@Mixin(RenderPhase.Target.class)
-public class RenderPhaseTargetMixins extends RenderPhaseMixins {
-
-    @Inject(method = "<init>(Ljava/lang/String;Ljava/lang/Runnable;Ljava/lang/Runnable;)V", at = @At(value = "TAIL"))
-    public void resetActionToDoNothing(String string, Runnable runnable, Runnable runnable2,
-        CallbackInfo ci) {
-        setBeginAction(() -> {
-        });
-        setEndAction(() -> {
-        });
-    }
+/**
+ * Stub: RenderPhase.Target was removed in 1.21.11.
+ * This mixin was targeting RenderPhase.Target which no longer exists.
+ * The functionality (resetting target actions to no-ops) is no longer needed
+ * since the RenderPhase system has been replaced by RenderSetup.
+ */
+// Disabled: RenderPhase.Target class was removed in 1.21.11
+// @Mixin(RenderPhase.Target.class)
+public class RenderPhaseTargetMixins {
 }

@@ -64,12 +64,14 @@ public class VulkanConstants {
             };
         }
 
-        public NativeImage.InternalFormat getNativeImageInternalFormat() {
+        // In 1.21.11, NativeImage.InternalFormat was removed.
+        // Returns the channel count equivalent instead.
+        public int getChannelCount() {
             return switch (this) {
-                case VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SRGB -> NativeImage.InternalFormat.RED;
-                case VK_FORMAT_R8G8_UNORM, VK_FORMAT_R8G8_SRGB -> NativeImage.InternalFormat.RG;
-                case VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R8G8B8_SRGB -> NativeImage.InternalFormat.RGB;
-                case VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SRGB -> NativeImage.InternalFormat.RGBA;
+                case VK_FORMAT_R8_UNORM, VK_FORMAT_R8_SRGB -> 1;
+                case VK_FORMAT_R8G8_UNORM, VK_FORMAT_R8G8_SRGB -> 2;
+                case VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R8G8B8_SRGB -> 3;
+                case VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SRGB -> 4;
                 default -> throw new IllegalStateException("Unexpected value: " + this.value);
             };
         }

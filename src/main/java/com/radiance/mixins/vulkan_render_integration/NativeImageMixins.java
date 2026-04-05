@@ -44,31 +44,16 @@ public abstract class NativeImageMixins implements
     @Shadow
     public abstract NativeImage.Format getFormat();
 
-    @Inject(method = "uploadInternal(IIIIIIIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/NativeImage;checkAllocated()V", shift = At.Shift.AFTER), cancellable = true)
-    public void redirectUploadInternal(int level, int offsetX, int offsetY, int unpackSkipPixels,
-        int unpackSkipRows, int regionWidth, int regionHeight, boolean blur, CallbackInfo ci) {
-        try {
-            INativeImageExt self = (INativeImageExt) this;
-            int targetId = self.neoVoxelRT$getTargetID();
-
-            AuxiliaryTextures.loadAndUpload((NativeImage) (Object) this, self, level, offsetX,
-                offsetY, unpackSkipPixels, unpackSkipRows, regionWidth, regionHeight, blur);
-
-            TextureProxy.queueUpload(pointer, (int) sizeBytes, width, targetId, unpackSkipPixels,
-                unpackSkipRows, offsetX, offsetY, regionWidth, regionHeight, level);
-
-            // OMM: classify texture alpha at base mip level
-            if (level == 0 && this.format.hasAlpha() && this.format.getChannelCount() == 4) {
-                int alphaClass = classifyAlpha(pointer, width, height);
-                TextureProxy.setTextureAlphaClass(targetId, alphaClass);
-            }
-        } finally {
-            if (blur) {
-                this.close();
-            }
-        }
-        ci.cancel();
-    }
+    // Disabled: uploadInternal was removed in 1.21.11.
+    // The texture upload system now uses GpuTexture-based APIs.
+    // TODO: Hook into the new texture upload mechanism.
+    // @Inject(method = "uploadInternal(IIIIIIIZ)V", at = @At(...))
+    // public void redirectUploadInternal(...) { }
+    //
+    // The original method handled:
+    // - Uploading pixel data via TextureProxy.queueUpload
+    // - Loading/uploading auxiliary textures (normal, specular, etc.)
+    // - Classifying texture alpha (OMM) at base mip level
 
     @Inject(method = "close()V", at = @At(value = "HEAD"))
     public void closeImage(CallbackInfo ci) {
@@ -175,21 +160,9 @@ public abstract class NativeImageMixins implements
     @Shadow
     public abstract void close();
 
-    @Inject(method = "loadFromTextureImage(IZ)V", at = @At(value = "HEAD"), cancellable = true)
-    public void redirectLoadFromTextureImage(int level, boolean removeAlpha, CallbackInfo ci) {
-        RenderSystem.assertOnRenderThread();
-        this.checkAllocated();
-        RendererProxy.takeScreenshot(true, this.width, this.height, this.format.getChannelCount(),
-            this.pointer);
-        if (removeAlpha && this.format.hasAlpha()) {
-            for (int i = 0; i < this.getHeight(); i++) {
-                for (int j = 0; j < this.getWidth(); j++) {
-                    this.setColor(j, i, this.getColor(j, i) | 255 << this.format.getAlphaOffset());
-                }
-            }
-        }
-        ci.cancel();
-    }
+    // Disabled: loadFromTextureImage was removed in 1.21.11.
+    // @Inject(method = "loadFromTextureImage(IZ)V", at = @At(value = "HEAD"), cancellable = true)
+    // public void redirectLoadFromTextureImage(int level, boolean removeAlpha, CallbackInfo ci) { }
 
     @Override
     public void neoVoxelRT$loadFromTextureImageWithoutUI(int level, boolean removeAlpha) {

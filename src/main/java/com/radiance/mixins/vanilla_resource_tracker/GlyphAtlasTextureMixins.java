@@ -1,5 +1,6 @@
 package com.radiance.mixins.vanilla_resource_tracker;
 
+import com.radiance.mixin_related.extensions.vulkan_render_integration.IAbstractTextureExt;
 import com.radiance.mixin_related.extensions.vanilla_resource_tracker.IGlyphAtlasTextureExt;
 import com.radiance.mixin_related.extensions.vanilla_resource_tracker.IRenderableGlyphExt;
 import net.minecraft.client.font.BakedGlyph;
@@ -30,8 +31,9 @@ public abstract class GlyphAtlasTextureMixins extends AbstractTextureMixins impl
         }
         GlyphAtlasTexture.Slot slot = this.rootSlot.findSlotFor(glyph);
         if (slot != null) {
-            this.bindTexture();
-            glyph.upload(this.getGlId(), slot.x, slot.y);
+            // bindTexture() was removed in 1.21.11
+            // getGlId() is now provided by IAbstractTextureExt via vulkan_render_integration.AbstractTextureMixins
+            glyph.upload(IAbstractTextureExt.getGlId((net.minecraft.client.texture.AbstractTexture)(Object)this), slot.x, slot.y);
             float f = 256.0f;
             float g = 256.0f;
             float h = 0.01f;

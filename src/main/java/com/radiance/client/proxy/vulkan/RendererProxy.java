@@ -1,11 +1,10 @@
 package com.radiance.client.proxy.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.radiance.client.constant.Constants;
 import com.radiance.mixin_related.extensions.vulkan_render_integration.INativeImageExt;
 import java.nio.ByteBuffer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.Window;
 import org.lwjgl.system.MemoryUtil;
@@ -22,7 +21,8 @@ public class RendererProxy {
         String mapped = System.mapLibraryName("glfw");
         String[] candidates = {mapped, "libglfw.so.3", "libglfw.3.dylib", "glfw3.dll"};
         RendererProxy.initRenderer(candidates, window.getHandle());
-        RenderSystem.apiDescription = "Vulkan 1.4";
+        // RenderSystem.apiDescription was removed in 1.21.11
+        // RenderSystem.apiDescription = "Vulkan 1.4";
     }
 
     public static native int maxSupportedTextureSize();
